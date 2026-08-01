@@ -95,11 +95,11 @@ public class Empleado {
         return bonoMensual;
     }
     
-    // Java mostraría algo como: com.corporatetalenthub.modelo.Empleado@4f3f5b24 cuando
-    // se vaya a imprimir en el System.out.print.
+    // Java mostraría algo como "com.corporatetalenthub.modelo.Empleado@4f3f5b24" cuando
+    // se vaya a imprimir el objeto Empleado en el System.out.print() de App.
     
     // Por eso se sobrescribe (@Override) el método toString(). Par que java muestre el
-    // mensaje que le especifique y no el predeterminado
+    // mensaje que yo le especifique, en lugar del predeterminado.
 
     @Override
     public String toString() {

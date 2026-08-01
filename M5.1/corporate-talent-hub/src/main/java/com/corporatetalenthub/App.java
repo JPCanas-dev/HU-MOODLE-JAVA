@@ -48,8 +48,8 @@ public class App {
         System.out.println("");
         System.out.println(a);
         System.out.println(b);
-        System.out.println(a == b);      // false: referencias diferentes
-        System.out.println(a.equals(b)); // true: componentes iguales
+        System.out.println("a == b: " + (a == b));      // false: referencias diferentes
+        System.out.println("a.equals(b): " + (a.equals(b))); // true: componentes iguales
 
     }
 
@@ -57,15 +57,15 @@ public class App {
     // Static: se accede a un método de la clase, sin necesidad de crear/instanciar un objeto
     private static Empleado crearEmpleadoDePrueba() {
         return new Empleado(
-                (byte) 3, // byte
-                (short) 2024, // short
-                102, // int: ID par
-                1_023_456_789L, // long: sufijo L
-                92.5f, // float: sufijo f
-                3_000_000.0, // double
-                'I', // char: contrato indefinido
-                true, // boolean
-                "Laura Gómez", // String
+                (byte) 3,               // byte
+                (short) 2024,           // short
+                102,                    // int: ID par
+                1_023_456_789L,         // long: sufijo L
+                92.5f,                  // float: sufijo f
+                3_000_000.0,            // double
+                'I',                    // char: contrato indefinido
+                true,                   // boolean
+                "Laura Gómez",          // String
                 27,
                 2,
                 500_000.0);
