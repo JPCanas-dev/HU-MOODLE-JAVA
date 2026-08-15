@@ -11,10 +11,12 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import java.util.List;
+import java.util.Map;
+
 public class App {
 
     // Final: este atributo solo podrá recibir un valor una sola vez.
-    private static final int MAXIMO_EMPLEADOS = 50;
     private static final int CANTIDAD_TRIMESTRES = 3;
     private static final double NOTA_MINIMA = 0.0;
     private static final double NOTA_MAXIMA = 100.0;
@@ -34,18 +36,29 @@ public class App {
         
         try (var scanner = new Scanner(System.in)) {
 
-            // Se crean arreglos y matriz con su cantidad de posiciones con valor null
+            // Se crean las colecciones para almacenar los datos.
             var empleados = new ArrayList<Empleado>();
             var empleadosPorId = new HashMap<String, Empleado>();
-            var calificaciones = new double[MAXIMO_EMPLEADOS][CANTIDAD_TRIMESTRES];
-            var cantidadEmpleados = 0; // (var = int) porque 0 es int
+            
+            /*
+            * List.of() y Map.of() crean colecciones inmutables.
+            * Esto evita modificaciones accidentales en datos de configuración.
+            * A diferencia de ArrayList y HashMap, no permiten add(), put() o remove().
+             */
+            var tecnologias = List.of("Java", "JavaScript", "Python", "SQL");
+            var sedes = Map.of(
+                    "Barranquilla", "Colombia",
+                    "Bogotá", "Colombia",
+                    "Medellín", "Colombia"
+            );
+            var calificaciones = new ArrayList<double[]>();
             var sistemaActivo = true; // (var = boolean) porque true es boolean
 
             do {
                 mostrarMenu();
 
                 try {
-                    System.err.println("Seleccione una opción: ");
+                    System.out.println("Seleccione una opción: ");
                     var opcion = scanner.nextInt();
                     scanner.nextLine(); // Consume el salto de línea pendiente.
 
@@ -60,14 +73,11 @@ public class App {
 
                         case 1:
                             
-                            if (cantidadEmpleados >= MAXIMO_EMPLEADOS) {
-                                System.out.println("No hay espacios para más empleados");
-                            } else {
-                                var registrado = registrarEmpleado(
-                                        scanner,
-                                        empleados,
-                                        calificaciones);
-                            }
+                            registrarEmpleado(
+                                    scanner,
+                                    empleados,
+                                    empleadosPorId,
+                                    calificaciones);
                             break;
 
                         case 2:
@@ -76,6 +86,41 @@ public class App {
 
                         case 3:
                             mostrarCategoriasSalariales();
+                            break;
+                            
+                        case 4:
+
+                            System.out.print("ID del empleado a eliminar: ");
+                            var idEliminar = scanner.nextInt();
+
+                            if (eliminarEmpleado(empleados, empleadosPorId, calificaciones, idEliminar)) {
+                                System.out.println("Empleado eliminado correctamente.");
+                            } else {
+                                System.out.println("Empleado no encontrado.");
+                            }
+                            break;
+
+                        case 5:
+
+                            var cantidadAntes = empleados.size();
+                            filtrarEmpleados(empleados, empleadosPorId, calificaciones);
+                            var cantidadEliminados = cantidadAntes - empleados.size();
+                            System.out.println("Empleados eliminados por bajo desempeño: " + cantidadEliminados);
+                            System.out.println( "Empleados restantes: " + empleados.size());
+                            break;
+                            
+                        case 6:
+                            
+                            System.out.print("ID del empleado a buscar: ");
+                            var idBuscar = scanner.nextInt();
+
+                            var empleadoEncontrado = buscarEmpleadoPorId(empleadosPorId, idBuscar);
+
+                            if (empleadoEncontrado != null) {
+                                System.out.println("Empleado encontrado: " + empleadoEncontrado.getNombre());
+                            } else {
+                                System.out.println("Empleado no encontrado.");
+                            }
                             break;
 
                         case 0:
@@ -121,6 +166,9 @@ public class App {
                 1. Registrar empleado y calificaciones
                 2. Mostrar reporte de desempeño
                 3. Consultar categorías salariales
+                4. Eliminar empleado
+                5. Eliminar empleados con bajo desempeño
+                6. Buscar empleado por ID
                 0. Salir
                 """);
     }
@@ -128,7 +176,8 @@ public class App {
     private static boolean registrarEmpleado(
             Scanner scanner,
             ArrayList<Empleado> empleados,
-            double[][] calificaciones) 
+            HashMap<String, Empleado> empleadosPorId,
+            ArrayList<double[]> calificaciones) 
     {
 
         System.out.print("ID positivo: ");
@@ -172,13 +221,11 @@ public class App {
             return false;
         }
         
-        var posicion = empleados.size();
+        var calificacionEmpleado = new double[CANTIDAD_TRIMESTRES];
         
         for (var trimestre = 0; trimestre < CANTIDAD_TRIMESTRES; trimestre++) {
             
-            System.out.printf(
-                    "Calificación del trimestre %d (0 a 100): ",
-                    trimestre + 1);
+            System.out.printf("Calificación del trimestre %d (0 a 100): ", trimestre + 1);
             var calificacion = scanner.nextDouble();
 
             if (calificacion < NOTA_MINIMA || calificacion > NOTA_MAXIMA) {
@@ -186,9 +233,12 @@ public class App {
                 scanner.nextLine();
                 return false;
             }
+            
+            calificacionEmpleado[trimestre] = calificacion;
 
-            calificaciones[posicion][trimestre] = calificacion;
         }
+        
+        calificaciones.add(calificacionEmpleado);
 
         scanner.nextLine();
         var empleado = new Empleado(id, nombre, edad, salario);
@@ -198,9 +248,7 @@ public class App {
         return true;
     }
 
-    private static boolean idRepetido(
-            ArrayList<Empleado> empleados,
-            int idBuscado) {
+    private static boolean idRepetido(ArrayList<Empleado> empleados, int idBuscado) {
         
         for (var empleado : empleados) {
             if (empleado.getId() == idBuscado) {
@@ -220,27 +268,46 @@ public class App {
 
     private static void mostrarReporte(
             ArrayList<Empleado> empleados,
-            double[][] calificaciones) {
-
+            ArrayList<double[]> calificaciones) {
+        
         if (empleados.isEmpty()) {
             System.out.println("Todavía no hay empleados registrados.");
             return;
         }
 
+        /*
+        * En Java 8/11 se usaban índices manuales:
+        * get(0) para el primero y get(size() - 1) para el último.
+        *
+        * Java 21 agrega getFirst(), getLast() y reversed(),
+        * mejorando la legibilidad y reduciendo errores de índices.
+         */
+        var primerEmpleado = empleados.getFirst();
+        var ultimoEmpleado = empleados.getLast();
+
         System.out.println("\nREPORTE DE DESEMPEÑO");
+
+        System.out.println("Primer empleado: " + primerEmpleado.getNombre());
+        System.out.println("Último empleado: " + ultimoEmpleado.getNombre());
+        
+        var empleadosReversa = empleados.reversed();
+        
+        System.out.println("Empleados en orden inverso:");
+
+        for (var empleado : empleadosReversa) {
+            System.out.println(empleado.getNombre());
+        }
 
         for (var fila = 0; fila < empleados.size(); fila++) {
             var suma = 0.0;
 
             // Los dos for forman el recorrido anidado de la matriz.
-            for (var columna = 0;
-                    columna < CANTIDAD_TRIMESTRES;
-                    columna++) {
-                suma += calificaciones[fila][columna];
+            for (var columna = 0; columna < CANTIDAD_TRIMESTRES; columna++) {
+                suma += calificaciones.get(fila)[columna];
             }
 
             var promedio = suma / CANTIDAD_TRIMESTRES;
-            empleados[fila].setPromedioDesempenio(promedio);
+            empleados.get(fila).setPromedioDesempenio(promedio);
 
             /*
              * Casting explícito de double a int. Se elimina la parte decimal, no
@@ -253,18 +320,57 @@ public class App {
                     ? "PROMOVIDO"
                     : "NO PROMOVIDO";
 
-            var categoria = obtenerCategoriaSalarial(
-                    empleados[fila].getSalario());
+            var categoria = obtenerCategoriaSalarial(empleados.get(fila).getSalario());
 
             System.out.printf(
                     "ID: %d | Nombre: %s | Promedio: %.2f | "
                     + "Simplificado: %d | Estado: %s | Categoría: %s%n",
-                    empleados[fila].getId(),
-                    empleados[fila].getNombre(),
+                    empleados.get(fila).getId(),
+                    empleados.get(fila).getNombre(),
                     promedio,
                     puntajeSimplificado,
                     estadoPromocion,
                     categoria);
+        }
+
+        var sumaSalarios = 0.0;
+
+        for (var empleado : empleados) {
+            sumaSalarios += empleado.getSalario();
+        }
+
+        var promedioSalarios = empleados.isEmpty() ? 0 : sumaSalarios / empleados.size();
+
+        System.out.println("Total de empleados: " + empleados.size());
+        System.out.println("Promedio de salarios: " + promedioSalarios);
+
+    }
+
+    private static void filtrarEmpleados(
+            ArrayList<Empleado> empleados,
+            HashMap<String, Empleado> empleadosPorId,
+            ArrayList<double[]> calificaciones) {
+
+        for (var posicion = empleados.size() - 1; posicion >= 0; posicion--) {
+
+            var empleado = empleados.get(posicion);
+            var calificacionEmpleado = calificaciones.get(posicion);
+
+            var suma = 0.0;
+
+            for (var calificacion : calificacionEmpleado) {
+                suma += calificacion;
+            }
+
+            var promedio = suma / CANTIDAD_TRIMESTRES;
+            empleado.setPromedioDesempenio(promedio);
+
+            if (promedio < PROMEDIO_DESEMPENIO) {
+
+                empleados.removeIf(e -> e == empleado);
+                empleadosPorId.remove(String.valueOf(empleado.getId()));
+                calificaciones.remove(posicion);
+            }
         }
     }
 
@@ -314,16 +420,19 @@ public class App {
     private static boolean eliminarEmpleado(
             ArrayList<Empleado> empleados,
             HashMap<String, Empleado> empleadosPorId,
+            ArrayList<double[]> calificaciones,
             int idBuscado) {
 
         var empleado = empleadosPorId.remove(String.valueOf(idBuscado));
 
         if (empleado != null) {
+            var posicion = empleados.indexOf(empleado);
             empleados.remove(empleado);
+            calificaciones.remove(posicion);
             return true;
         }
-
         return false;
+        
     }
 
 }

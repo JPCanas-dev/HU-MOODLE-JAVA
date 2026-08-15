@@ -49,6 +49,8 @@ public class Empleado {
         this.promedioDesempenio = promedioDesempenio;
     }
 
-    
-    
+    public double getPromedioDesempenio() {
+        return this.promedioDesempenio;
+    }
+
 }
