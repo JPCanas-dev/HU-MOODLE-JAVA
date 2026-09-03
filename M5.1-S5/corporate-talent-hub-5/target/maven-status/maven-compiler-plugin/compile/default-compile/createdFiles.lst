@@ -1,0 +1,16 @@
+com\corporatetalenthub\modelo\DesempenioReport.class
+com\corporatetalenthub\App.class
+com\corporatetalenthub\dao\CalificacionDAO.class
+com\corporatetalenthub\modelo\Promocionable.class
+com\corporatetalenthub\controller\EmpleadoController.class
+config\TestConexion.class
+com\corporatetalenthub\modelo\Persona.class
+com\corporatetalenthub\dao\CalificacionDAOImpl.class
+com\corporatetalenthub\modelo\Desarrollador.class
+com\corporatetalenthub\modelo\Gerente.class
+com\corporatetalenthub\dao\EmpleadoDAO.class
+com\corporatetalenthub\view\EmpleadoView.class
+com\corporatetalenthub\modelo\ConsultorExterno.class
+config\ConexionDB.class
+com\corporatetalenthub\modelo\Empleado.class
+com\corporatetalenthub\dao\EmpleadoDAOImpl.class
